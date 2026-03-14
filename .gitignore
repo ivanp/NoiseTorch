@@ -3,3 +3,4 @@ licenses.go
 .vscode
 *.sublime-workspace
 *.sublime-project
+vendor/
