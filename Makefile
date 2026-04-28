@@ -5,11 +5,11 @@ WEBSITE_URL=https://github.com/noisetorch/NoiseTorch
 UPDATE_PUBKEY=Md2rdsS+b6W0trgcqa5lAWP978Zj0sFmubJ252OPKwc=
 VERSION := $(shell git describe --tags)
 
-dev: rnnoise
+dev:
 	mkdir -p bin/
 	go generate
 	go build -tags "nucular_gio novulkan" -ldflags '-X main.nameSuffix=${NAME_SUFFIX}_(dev) -X main.version=${VERSION} -X main.websiteURL=${WEBSITE_URL}' -o bin/noisetorch
-release: rnnoise
+release:
 	mkdir -p bin/
 	mkdir -p tmp/
 
@@ -27,6 +27,3 @@ release: rnnoise
 	tar cvzf ../bin/NoiseTorch_x64_${VERSION}.tgz .
 	rm -rf tmp/
 	go run scripts/signer.go -s -f bin/NoiseTorch_x64_${VERSION}.tgz
-rnnoise:
-	git submodule update --init --recursive
-	$(MAKE) -C c/ladspa
