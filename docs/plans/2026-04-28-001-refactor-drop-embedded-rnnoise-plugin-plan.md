@@ -363,7 +363,7 @@ After ~1 week of personal use confirms werman path works, delete the embedded so
 
 ---
 
-- [ ] **Unit 6: Build verification + manual smoke test (initial release)** *(Phase 2)*
+- [x] **Unit 6: Build verification + manual smoke test (initial release)** *(Phase 2)*
 
 **Goal:** Confirm clean compile and end-to-end runtime behavior for the werman-based release (without c/ deletion).
 
