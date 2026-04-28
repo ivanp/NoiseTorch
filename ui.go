@@ -488,7 +488,7 @@ func resetUI(ctx *ntcontext) {
 	ctx.views = NewViewStack()
 	ctx.views.Push(mainView)
 
-	if !ctx.haveCapabilities {
+	if !ctx.haveCapabilities && ctx.serverInfo.servertype == servertype_pulse {
 		ctx.views.Push(capabilitiesView)
 	}
 
