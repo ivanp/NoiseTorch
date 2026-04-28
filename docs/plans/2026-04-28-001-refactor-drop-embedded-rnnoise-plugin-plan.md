@@ -1,7 +1,7 @@
 ---
 title: "refactor: Drop embedded RNNoise plugin, depend on system noise-suppression-for-voice"
 type: refactor
-status: active
+status: completed
 date: 2026-04-28
 deepened: 2026-04-29
 ---
@@ -338,7 +338,7 @@ After ~1 week of personal use confirms werman path works, delete the embedded so
 
 ---
 
-- [ ] **Unit 5: Delete `c/` tree and `.gitmodules`** *(Phase 3 — after Phase 2 soaks ~1 week)*
+- [x] **Unit 5: Delete `c/` tree and `.gitmodules`** *(Phase 3 — after Phase 2 soaks ~1 week)*
 
 **Goal:** Remove orphaned C source, build artifacts, and submodule pointers — but only after werman path is validated in field.
 
