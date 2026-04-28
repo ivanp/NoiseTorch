@@ -182,7 +182,7 @@ After ~1 week of personal use confirms werman path works, delete the embedded so
 
 ## Implementation Units
 
-- [ ] **Unit 0: Pre-implementation spike (verify werman plugin + PA absolute-path semantics)** *(Phase 2)*
+- [x] **Unit 0: Pre-implementation spike (verify werman plugin + PA absolute-path semantics)** *(Phase 2)*
 
 **Goal:** Resolve the four pre-Unit-3 deferred questions before any code edits.
 
@@ -205,7 +205,7 @@ After ~1 week of personal use confirms werman path works, delete the embedded so
 
 ---
 
-- [ ] **Unit 1: Add `findSystemPlugin` + lazy lookup, drop embed and dumpLib in main.go** *(Phase 2)*
+- [x] **Unit 1: Add `findSystemPlugin` + lazy lookup, drop embed and dumpLib in main.go** *(Phase 2)*
 
 **Goal:** Drop `//go:embed`, `libRNNoise`, `dumpLib`, `removeLib`. Add `findSystemPlugin() (string, error)` that probes standard paths and returns the absolute path to `librnnoise_ladspa.so`. Lookup is lazy — called from module-load paths, not at startup.
 
@@ -240,7 +240,7 @@ After ~1 week of personal use confirms werman path works, delete the embedded so
 
 ---
 
-- [ ] **Unit 2: Drop `librnnoise` param from `cleanupExit` (15 call sites) in cli.go** *(Phase 2)*
+- [x] **Unit 2: Drop `librnnoise` param from `cleanupExit` (15 call sites) in cli.go** *(Phase 2)*
 
 **Goal:** With `removeLib` gone, `cleanupExit` no longer needs the path.
 
@@ -268,7 +268,7 @@ After ~1 week of personal use confirms werman path works, delete the embedded so
 
 ---
 
-- [ ] **Unit 3: Switch labels to werman + adjust channel counts in module.go** *(Phase 2)*
+- [x] **Unit 3: Switch labels to werman + adjust channel counts in module.go** *(Phase 2)*
 
 **Goal:** Replace `label=nt-filter` with `noise_suppressor_mono` (input) / `noise_suppressor_stereo` (output). Pass full plugin path. Adjust output-chain channel counts. Use lazy `findSystemPlugin` lookup at load time.
 
@@ -316,7 +316,7 @@ After ~1 week of personal use confirms werman path works, delete the embedded so
 
 ---
 
-- [ ] **Unit 4: Drop `rnnoise` build target from Makefile** *(Phase 2)*
+- [x] **Unit 4: Drop `rnnoise` build target from Makefile** *(Phase 2)*
 
 **Goal:** Remove the C build step from `dev` and `release`.
 

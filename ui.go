@@ -4,11 +4,14 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"image/color"
 	"log"
 	"os"
 	"os/exec"
+	"strings"
+	"sync"
 	"syscall"
 	"time"
 
@@ -295,6 +298,14 @@ func uiReloadFilters(ctx *ntcontext, inp, out device) {
 	}
 	if err := loadSupressor(ctx, &inp, &out); err != nil {
 		log.Println(err)
+		var pnfe *ErrPluginNotFound
+		if errors.As(err, &pnfe) {
+			ctx.views.Pop()
+			ctx.views.Push(makePluginMissingView(ctx, err.Error()))
+			(*ctx.masterWindow).Changed()
+			return
+		}
+		// PA error already handled by loadModule via resetUI+makeErrorView; fall through
 	}
 
 	//wait until PA reports it has actually loaded it, timeout at 10s
@@ -479,6 +490,38 @@ func makeConfirmView(ctx *ntcontext, title, text, confirmText, denyText string, 
 		if w.ButtonText(confirmText) {
 			ctx.views.Pop()
 			go confirmfunc()
+			return
+		}
+	}
+}
+
+var pluginMissingNotifyOnce sync.Once
+
+func makePluginMissingView(ctx *ntcontext, errMsg string) ViewFunc {
+	pluginMissingNotifyOnce.Do(func() {
+		exec.Command("notify-send", "NoiseTorch", "noise-suppression-for-voice not installed").Run()
+	})
+	return func(ctx *ntcontext, w *nucular.Window) {
+		w.Row(15).Dynamic(1)
+		w.Label("Plugin not found", "CB")
+		w.Row(15).Dynamic(1)
+		w.Label(errMsg, "CB")
+		w.Row(25).Dynamic(3)
+		if w.ButtonText("Copy install command") {
+			cmd := exec.Command("xclip", "-selection", "clipboard")
+			cmd.Stdin = strings.NewReader("pacman -S noise-suppression-for-voice")
+			cmd.Run()
+			return
+		}
+		if w.ButtonText("Retry") {
+			if _, err := findSystemPlugin(); err == nil {
+				ctx.views.Pop()
+				(*ctx.masterWindow).Changed()
+			}
+			return
+		}
+		if w.ButtonText("OK") {
+			ctx.views.Pop()
 			return
 		}
 	}

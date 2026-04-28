@@ -55,21 +55,21 @@ func doCLI(opt CLIOpts, config *config, librnnoise string) {
 		} else {
 			fmt.Println("Cannot look for updates right now.")
 		}
-		cleanupExit(librnnoise, 0)
+		cleanupExit(0)
 	}
 
 	if opt.setcap {
 		err := makeBinarySetcapped()
 		if err != nil {
-			cleanupExit(librnnoise, 1)
+			cleanupExit(1)
 		}
-		cleanupExit(librnnoise, 0)
+		cleanupExit(0)
 	}
 
 	paClient, err := pulseaudio.NewClient()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Couldn't create pulseaudio client: %v\n", err)
-		cleanupExit(librnnoise, 1)
+		cleanupExit(1)
 	}
 	defer paClient.Close()
 
@@ -99,7 +99,7 @@ func doCLI(opt CLIOpts, config *config, librnnoise string) {
 			fmt.Printf("\tDevice Name: %s\n\tDevice ID: %s\n\n", sinks[i].Name, sinks[i].ID)
 		}
 
-		cleanupExit(librnnoise, 0)
+		cleanupExit(0)
 	}
 
 	if opt.threshold > 0 {
@@ -115,9 +115,9 @@ func doCLI(opt CLIOpts, config *config, librnnoise string) {
 		err := unloadSupressor(&ctx)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error unloading PulseAudio Module: %+v\n", err)
-			cleanupExit(librnnoise, 1)
+			cleanupExit(1)
 		}
-		cleanupExit(librnnoise, 0)
+		cleanupExit(0)
 	}
 
 	if opt.loadInput {
@@ -127,7 +127,7 @@ func doCLI(opt CLIOpts, config *config, librnnoise string) {
 			defaultSource, err := getDefaultSourceID(paClient)
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "No source specified to load and failed to load default source: %+v\n", err)
-				cleanupExit(librnnoise, 1)
+				cleanupExit(1)
 			}
 			opt.sinkName = defaultSource
 		}
@@ -137,13 +137,13 @@ func doCLI(opt CLIOpts, config *config, librnnoise string) {
 				err := loadSupressor(&ctx, &sources[i], &device{})
 				if err != nil {
 					fmt.Fprintf(os.Stderr, "Error loading PulseAudio Module: %+v\n", err)
-					cleanupExit(librnnoise, 1)
+					cleanupExit(1)
 				}
-				cleanupExit(librnnoise, 0)
+				cleanupExit(0)
 			}
 		}
 		fmt.Fprintf(os.Stderr, "PulseAudio source not found: %s\n", opt.sinkName)
-		cleanupExit(librnnoise, 1)
+		cleanupExit(1)
 
 	}
 	if opt.loadOutput {
@@ -153,7 +153,7 @@ func doCLI(opt CLIOpts, config *config, librnnoise string) {
 			defaultSink, err := getDefaultSinkID(paClient)
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "No sink specified to load and failed to load default sink: %+v\n", err)
-				cleanupExit(librnnoise, 1)
+				cleanupExit(1)
 			}
 			opt.sinkName = defaultSink
 		}
@@ -163,19 +163,18 @@ func doCLI(opt CLIOpts, config *config, librnnoise string) {
 				err := loadSupressor(&ctx, &device{}, &sinks[i])
 				if err != nil {
 					fmt.Fprintf(os.Stderr, "Error loading PulseAudio Module: %+v\n", err)
-					cleanupExit(librnnoise, 1)
+					cleanupExit(1)
 				}
-				cleanupExit(librnnoise, 0)
+				cleanupExit(0)
 			}
 		}
 		fmt.Fprintf(os.Stderr, "PulseAudio sink not found: %s\n", opt.sinkName)
-		cleanupExit(librnnoise, 1)
+		cleanupExit(1)
 
 	}
 
 }
 
-func cleanupExit(librnnoise string, exitCode int) {
-	removeLib(librnnoise)
+func cleanupExit(exitCode int) {
 	os.Exit(exitCode)
 }

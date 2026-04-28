@@ -21,16 +21,13 @@ import (
 
 	"github.com/noisetorch/pulseaudio"
 
-	_ "embed"
+	"path/filepath"
 
 	"github.com/aarzilli/nucular"
 	"github.com/aarzilli/nucular/style"
 )
 
 //go:generate go run scripts/embedlicenses.go
-
-//go:embed c/ladspa/rnnoise_ladspa.so
-var libRNNoise []byte
 
 type device struct {
 	ID             string
@@ -66,12 +63,9 @@ func main() {
 	log.Printf("CAP_SYS_RESOURCE: %t\n", hasCapSysResource(getCurrentCaps()))
 
 	initializeConfigIfNot()
-	rnnoisefile := dumpLib()
-	defer removeLib(rnnoisefile)
 
 	ctx := ntcontext{}
 	ctx.config = readConfig()
-	ctx.librnnoise = rnnoisefile
 
 	doCLI(opt, ctx.config, ctx.librnnoise)
 
@@ -105,22 +99,33 @@ func main() {
 
 }
 
-func dumpLib() string {
-	f, err := os.CreateTemp("", "librnnoise-*.so")
-	if err != nil {
-		log.Fatalf("Couldn't open temp file for librnnoise\n")
-	}
-	f.Write(libRNNoise)
-	log.Printf("Wrote temp librnnoise to: %s\n", f.Name())
-	return f.Name()
-}
+type ErrPluginNotFound struct{ msg string }
 
-func removeLib(file string) {
-	err := os.Remove(file)
-	if err != nil {
-		log.Printf("Couldn't delete temp librnnoise: %v\n", err)
+func (e *ErrPluginNotFound) Error() string { return e.msg }
+
+func findSystemPlugin() (string, error) {
+	searchPaths := []string{
+		"/usr/lib/ladspa",
+		"/usr/lib64/ladspa",
+		"/usr/lib/x86_64-linux-gnu/ladspa",
+		"/usr/local/lib/ladspa",
 	}
-	log.Printf("Deleted temp librnnoise: %s\n", file)
+	if ladspaPath := os.Getenv("LADSPA_PATH"); ladspaPath != "" {
+		for _, p := range strings.Split(ladspaPath, ":") {
+			if p != "" {
+				searchPaths = append(searchPaths, p)
+			}
+		}
+	}
+	for _, dir := range searchPaths {
+		candidate := filepath.Join(dir, "librnnoise_ladspa.so")
+		log.Printf("Probing rnnoise plugin at: %s\n", candidate)
+		if _, err := os.Stat(candidate); err == nil {
+			log.Printf("Found rnnoise plugin: %s\n", candidate)
+			return candidate, nil
+		}
+	}
+	return "", &ErrPluginNotFound{"noise-suppression-for-voice not found. Install via your package manager (Arch: pacman -S noise-suppression-for-voice)"}
 }
 
 func getSources(ctx *ntcontext, client *pulseaudio.Client) []device {

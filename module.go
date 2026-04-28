@@ -141,6 +141,12 @@ func supressorState(ctx *ntcontext) (int, bool) {
 }
 
 func loadSupressor(ctx *ntcontext, inp *device, out *device) error {
+	pluginPath, err := findSystemPlugin()
+	if err != nil {
+		return err
+	}
+	ctx.librnnoise = pluginPath
+
 	if ctx.serverInfo.servertype == servertype_pulse {
 		log.Printf("Querying pulse rlimit\n")
 		pid, err := getPulsePid()
@@ -210,7 +216,7 @@ func loadPipeWireInput(ctx *ntcontext, inp *device) error {
 	idx, err := loadModule(ctx, "module-ladspa-source",
 		fmt.Sprintf("source_name='Filtered Microphone for %s' master=%s "+
 			"rate=48000 channels=1 "+
-			"label=nt-filter plugin=%s control=%d", inp.Name, inp.ID, ctx.librnnoise, ctx.config.Threshold))
+			"label=noise_suppressor_mono plugin=%s control=%d", inp.Name, inp.ID, ctx.librnnoise, ctx.config.Threshold))
 
 	if err != nil {
 		return err
@@ -223,8 +229,8 @@ func loadPipeWireOutput(ctx *ntcontext, out *device) error {
 	log.Printf("Loading supressor for pipewire\n")
 	idx, err := loadModule(ctx, "module-ladspa-sink",
 		fmt.Sprintf("sink_name='Filtered Headphones' master=%s "+
-			"rate=48000 channels=1 "+
-			"label=nt-filter plugin=%s control=%d", out.ID, ctx.librnnoise, ctx.config.Threshold))
+			"rate=48000 channels=2 "+
+			"label=noise_suppressor_stereo plugin=%s control=%d", out.ID, ctx.librnnoise, ctx.config.Threshold))
 
 	if err != nil {
 		return err
@@ -243,7 +249,7 @@ func loadPulseInput(ctx *ntcontext, inp *device) error {
 
 	idx, err = loadModule(ctx, "module-ladspa-sink",
 		fmt.Sprintf("sink_name=nui_mic_raw_in sink_master=nui_mic_denoised_out "+
-			"label=nt-filter plugin=%s control=%d", ctx.librnnoise, ctx.config.Threshold))
+			"label=noise_suppressor_mono plugin=%s control=%d", ctx.librnnoise, ctx.config.Threshold))
 	if err != nil {
 		return err
 	}
@@ -286,7 +292,7 @@ func loadPulseOutput(ctx *ntcontext, out *device) error {
 	}
 
 	_, err = loadModule(ctx, "module-ladspa-sink", fmt.Sprintf(`sink_name=nui_out_ladspa sink_master=nui_out_out_sink `+
-		`label=nt-filter channels=1 plugin=%s control=%d rate=%d`,
+		`label=noise_suppressor_stereo channels=2 plugin=%s control=%d rate=%d`,
 		ctx.librnnoise, ctx.config.Threshold, 48000))
 	if err != nil {
 		return err
@@ -299,7 +305,7 @@ func loadPulseOutput(ctx *ntcontext, out *device) error {
 	}
 
 	_, err = loadModule(ctx, "module-loopback",
-		fmt.Sprintf("source=nui_out_in_sink.monitor sink=nui_out_ladspa channels=1 latency_msec=50 source_dont_move=true sink_dont_move=true"))
+		fmt.Sprintf("source=nui_out_in_sink.monitor sink=nui_out_ladspa channels=2 latency_msec=50 source_dont_move=true sink_dont_move=true"))
 	if err != nil {
 		return err
 	}
